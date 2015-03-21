@@ -1,6 +1,7 @@
 (ns hello-cc.core
   (:require [clojure.tools.cli :refer [parse-opts]]
-            [clojure.string :as s])
+            [clojure.string :as string]
+            [cljs.closure :as cl])
   (:import [java.util List]
            [java.util.logging Level]
            [com.google.javascript.jscomp ProcessCommonJSModules
@@ -12,30 +13,17 @@
 (def cli-options
   [[nil "--js JS_FILE" "JavaScript File"
     :parse-fn str
-    :validate [#(not (s/blank? %)) "Please pass a valid JavaScript filename"]]
+    :validate [#(not (string/blank? %)) "Please pass a valid JavaScript filename"]]
    ["-m" "--module-type TYPE" "JavaScript module type"
     :parse-fn keyword
     :validate [(fn [v] (some #(= % v) module-types))
                (str "Please use one of the following module types: "
-                    (s/join ", " module-types))]]
+                    (string/join ", " module-types))]]
    ["-h" "--help"]])
 
 (defn exit [status msg]
   (println msg)
   (System/exit status))
-
-(defn report-failure [^Result result]
-  (let [errors (.errors result)
-        warnings (.warnings result)]
-    (doseq [next (seq errors)]
-      (println "ERROR:" (.toString ^JSError next)))
-    (doseq [next (seq warnings)]
-      (println "WARNING:" (.toString ^JSError next)))))
-
-(defn ^com.google.javascript.jscomp.Compiler make-closure-compiler []
-  (let [compiler (com.google.javascript.jscomp.Compiler.)]
-    (com.google.javascript.jscomp.Compiler/setLoggingLevel Level/WARNING)
-    compiler))
 
 (defn set-options [opts ^CompilerOptions compiler-options]
   (case (:type opts)
@@ -53,11 +41,11 @@
   (let [^List externs '()
         ^List inputs (list (SourceFile/fromFile file))
         ^CompilerOptions options (set-options {:type type} (CompilerOptions.))
-        compiler (make-closure-compiler)
+        compiler (cl/make-closure-compiler)
         ^Result result (.compile compiler externs inputs options)]
     (if (.success result)
       (println (.toSource compiler))
-      (report-failure result))))
+      (cl/report-failure result))))
 
 (defn -main
   [& args]
@@ -70,5 +58,5 @@
                  errors)]
     (cond
       (:help options) (exit 0 summary)
-      errors (exit 1 (s/join "\n" errors)))
+      errors (exit 1 (string/join "\n" errors)))
     (process-js-module (:js options) (:module-type options))))

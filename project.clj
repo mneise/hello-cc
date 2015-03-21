@@ -5,6 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.3.1"]
+                 [org.clojure/clojurescript "0.0-3126"]
                  [com.google.javascript/closure-compiler "v20150315"]]
   :profiles {:uberjar {:aot :all}}
   :main hello-cc.core)

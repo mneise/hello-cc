@@ -13,6 +13,7 @@
 (def cli-options
   [[nil "--js JS_FILE" "JavaScript File"
     :parse-fn str
+    :assoc-fn (fn [m k v] (update-in m [k] #(conj % v)))
     :validate [#(not (string/blank? %)) "Please pass a valid JavaScript filename"]]
    ["-m" "--module-type TYPE" "JavaScript module type"
     :parse-fn keyword
@@ -37,9 +38,9 @@
   compiler-options)
 
 (defn process-js-module
-  [file type]
+  [files type]
   (let [^List externs '()
-        ^List inputs (list (SourceFile/fromFile file))
+        ^List inputs (map #(SourceFile/fromFile %) files)
         ^CompilerOptions options (set-options {:type type} (CompilerOptions.))
         compiler (cl/make-closure-compiler)
         ^Result result (.compile compiler externs inputs options)]

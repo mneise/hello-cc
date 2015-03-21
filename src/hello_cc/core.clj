@@ -4,11 +4,10 @@
   (:import [java.util List]
            [java.util.logging Level]
            [com.google.javascript.jscomp ProcessCommonJSModules
-            CompilerOptions SourceFile Result JSError])
+            CompilerOptions SourceFile Result JSError CompilerOptions$LanguageMode])
   (:gen-class main true))
 
-(def module-types [:commonjs :amd])
-
+(def module-types [:commonjs :amd :es6])
 
 (def cli-options
   [[nil "--js JS_FILE" "JavaScript File"
@@ -43,7 +42,10 @@
     :commonjs (.setProcessCommonJSModules compiler-options true)
     :amd (doto compiler-options
            (.setProcessCommonJSModules true)
-           (.setTransformAMDToCJSModules true)))
+           (.setTransformAMDToCJSModules true))
+    :es6 (doto compiler-options
+           (.setLanguageIn CompilerOptions$LanguageMode/ECMASCRIPT6)
+           (.setLanguageOut CompilerOptions$LanguageMode/ECMASCRIPT5)))
   compiler-options)
 
 (defn process-js-module

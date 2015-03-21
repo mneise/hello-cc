@@ -6,7 +6,7 @@
            [java.util.logging Level]
            [com.google.javascript.jscomp ProcessCommonJSModules
             CompilerOptions SourceFile Result JSError CompilerOptions$LanguageMode])
-  (:gen-class main true))
+  (:gen-class))
 
 (def module-types [:commonjs :amd :es6])
 

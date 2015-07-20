@@ -4,8 +4,11 @@
             [cljs.closure :as cl])
   (:import [java.util List]
            [java.util.logging Level]
-           [com.google.javascript.jscomp ProcessCommonJSModules
-            CompilerOptions SourceFile Result JSError CompilerOptions$LanguageMode])
+           [com.google.javascript.jscomp CompilerOptions SourceFile
+            Result JSError CompilerOptions$LanguageMode CompilerInput
+            ProcessCommonJSModules ES6ModuleLoader ProcessEs6Modules
+            CompilerInput]
+           [com.google.javascript.rhino Node InputId])
   (:gen-class))
 
 (def module-types [:commonjs :amd :es6])
@@ -35,6 +38,7 @@
     :es6 (doto compiler-options
            (.setLanguageIn CompilerOptions$LanguageMode/ECMASCRIPT6)
            (.setLanguageOut CompilerOptions$LanguageMode/ECMASCRIPT5)))
+  (.setPrettyPrint compiler-options true)
   compiler-options)
 
 (defn process-js-module
@@ -48,6 +52,23 @@
       (println (.toSource compiler))
       (cl/report-failure result))))
 
+(defn process-js-module2
+  [files type]
+  (let [^List externs '()
+        module-root "./"
+        ^List source-files (map #(SourceFile/fromFile %) files)
+        ^List inputs (map #(CompilerInput. %) source-files)
+        ^CompilerOptions options (doto (CompilerOptions.)
+                                   (.setPrettyPrint true))
+        compiler (doto (cl/make-closure-compiler)
+                   (.init externs source-files options))
+        es6-loader (ES6ModuleLoader. (list module-root) inputs)
+        cjs (ProcessCommonJSModules. compiler es6-loader true)]
+    (doseq [file source-files
+            :let [^Node root (.parse compiler file)]]
+      (.process cjs nil root)
+      (println (.toSource compiler root)))))
+
 (defn -main
   [& args]
   (let [{:keys [options arguments errors summary]} (parse-opts args cli-options)
@@ -60,4 +81,4 @@
     (cond
       (:help options) (exit 0 summary)
       errors (exit 1 (string/join "\n" errors)))
-    (process-js-module (:js options) (:module-type options))))
+    (process-js-module2 (:js options) (:module-type options))))

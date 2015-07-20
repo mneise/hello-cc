@@ -6,6 +6,6 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/clojurescript "0.0-3126"]
-                 [com.google.javascript/closure-compiler "v20150315"]]
+                 [com.google.javascript/closure-compiler "v20150609-SNAPSHOT"]]
   :profiles {:uberjar {:aot :all}}
   :main hello-cc.core)

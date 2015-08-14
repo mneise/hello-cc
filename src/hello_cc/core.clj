@@ -7,7 +7,7 @@
            [com.google.javascript.jscomp CompilerOptions SourceFile
             Result JSError CompilerOptions$LanguageMode CompilerInput
             ProcessCommonJSModules ES6ModuleLoader ProcessEs6Modules
-            CompilerInput]
+            CompilerInput TransformAMDToCJSModule]
            [com.google.javascript.rhino Node InputId])
   (:gen-class))
 
@@ -58,15 +58,27 @@
         module-root "./"
         ^List source-files (map #(SourceFile/fromFile %) files)
         ^List inputs (map #(CompilerInput. %) source-files)
-        ^CompilerOptions options (doto (CompilerOptions.)
+        ^CompilerOptions options (if (= type :es6)
+                                   (doto (CompilerOptions.)
+                                     (.setLanguageIn CompilerOptions$LanguageMode/ECMASCRIPT6)
+                                     (.setLanguageOut CompilerOptions$LanguageMode/ECMASCRIPT5))
+                                   (CompilerOptions.))
+        ^CompilerOptions options (doto options
                                    (.setPrettyPrint true))
         compiler (doto (cl/make-closure-compiler)
                    (.init externs source-files options))
-        es6-loader (ES6ModuleLoader. (list module-root) inputs)
-        cjs (ProcessCommonJSModules. compiler es6-loader true)]
+        es6-loader (ES6ModuleLoader. (list module-root) inputs)]
     (doseq [file source-files
-            :let [^Node root (.parse compiler file)]]
-      (.process cjs nil root)
+            :let [^Node root (.parse compiler file)
+                  cjs (if (= type :es6)
+                        (ProcessEs6Modules. compiler es6-loader true)
+                        (ProcessCommonJSModules. compiler es6-loader true))]]
+      (if (= type :es6)
+        (.processFile cjs root)
+        (do (when (= type :amd)
+              (.process (TransformAMDToCJSModule. compiler) nil root))
+            (.process cjs nil root)))
+      (cl/report-failure (.getResult compiler))
       (println (.toSource compiler root)))))
 
 (defn -main

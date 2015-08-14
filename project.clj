@@ -3,9 +3,9 @@
   :url "https://github.com/MNeise/hello-cc"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.7.0"]
+                 [org.clojure/clojurescript "1.7.48"]
                  [org.clojure/tools.cli "0.3.1"]
-                 [org.clojure/clojurescript "0.0-3126"]
-                 [com.google.javascript/closure-compiler "v20150609-SNAPSHOT"]]
+                 [com.google.javascript/closure-compiler "v20150729"]]
   :profiles {:uberjar {:aot :all}}
   :main hello-cc.core)
